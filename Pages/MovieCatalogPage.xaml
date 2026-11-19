@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<ContentPage
+    x:Name="ThisPage"
+    x:Class="MauiStartup.Pages.MovieCatalogPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:models="clr-namespace:MauiStartup.Models"
+    xmlns:viewmodels="clr-namespace:MauiStartup.ViewModels"
+    xmlns:controls="clr-namespace:MauiStartup.Controls"
+    x:DataType="viewmodels:MovieCatalogViewModel"
+    Title="{Binding CatalogTitle}">
+
+    <Grid
+        Padding="12"
+        RowDefinitions="Auto,*"
+        RowSpacing="8">
+
+        <VerticalStackLayout
+            Grid.Row="0"
+            Spacing="8">
+
+            <Label
+                Text="{Binding CatalogTitle}"
+                FontSize="24"
+                FontAttributes="Bold" />
+
+            <Grid
+                ColumnDefinitions="*,*"
+                ColumnSpacing="8">
+
+                <Button
+                    Grid.Column="0"
+                    Text="{Binding FavoritesButtonText}"
+                    BackgroundColor="{Binding FavoritesButtonBackground}"
+                    TextColor="White"
+                    Command="{Binding ToggleFavoritesCommand}"
+                    CornerRadius="10" />
+
+                <Button
+                    Grid.Column="1"
+                    Text="{Binding UserMoviesButtonText}"
+                    BackgroundColor="{Binding UserMoviesButtonBackground}"
+                    TextColor="White"
+                    Command="{Binding ToggleUserMoviesCommand}"
+                    CornerRadius="10" />
+
+            </Grid>
+
+            <Button
+                Text="Add New Movie"
+                BackgroundColor="#287A45"
+                TextColor="White"
+                Clicked="OnAddMovieClicked"
+                CornerRadius="10" />
+
+            <ActivityIndicator
+                IsRunning="{Binding IsLoading}"
+                IsVisible="{Binding IsLoading}" />
+
+            <VerticalStackLayout
+                IsVisible="{Binding IsErrorVisible}"
+                Spacing="6">
+
+                <Label
+                    Text="{Binding ErrorMessage}"
+                    TextColor="Red" />
+
+                <Button
+                    Text="Спробувати знову"
+                    Command="{Binding RetryLoadingCommand}" />
+
+            </VerticalStackLayout>
+
+        </VerticalStackLayout>
+
+
+        <CollectionView
+            x:Name="MoviesCollection"
+            Grid.Row="1"
+            ItemsSource="{Binding TitlesVisible}"
+            RemainingItemsThreshold="{Binding RemainingItemsThreshold}"
+            RemainingItemsThresholdReached="OnRemainingItemsThresholdReached"
+            SizeChanged="OnMoviesCollectionSizeChanged"
+            SelectionMode="Single"
+            SelectedItem="{Binding SelectedMovie, Mode=TwoWay}"
+            SelectionChangedCommand="{Binding OpenMovieDetailsCommand}"
+            SelectionChangedCommandParameter="{Binding SelectedItem, Source={RelativeSource Self}}">
+
+            <CollectionView.ItemsLayout>
+                <LinearItemsLayout
+                    Orientation="Vertical"
+                    ItemSpacing="12" />
+            </CollectionView.ItemsLayout>
+
+            <CollectionView.EmptyView>
+                <Label
+                    Text="No movies in this list."
+                    HorizontalOptions="Center"
+                    VerticalOptions="Center" />
+            </CollectionView.EmptyView>
+
+            <CollectionView.ItemTemplate>
+
+                <DataTemplate x:DataType="models:Movie">
+
+                    <SwipeView
+                        SwipeStarted="OnSwipeStarted"
+                        SwipeEnded="OnSwipeEnded">
+
+                        <SwipeView.RightItems>
+                            <SwipeItems Mode="Reveal">
+
+                                <SwipeItem
+                                    Text="{Binding ViewModel.SwipeText, Source={x:Reference ThisPage}}"
+                                    BackgroundColor="{Binding ViewModel.SwipeBackground, Source={x:Reference ThisPage}}"
+                                    Command="{Binding ViewModel.ManageFavoritesCommand, Source={x:Reference ThisPage}}"
+                                    CommandParameter="{Binding .}" />
+
+                            </SwipeItems>
+                        </SwipeView.RightItems>
+
+                        <controls:MovieCardView
+                            Model="{Binding .}"
+                            BackgroundColor="White" />
+
+                    </SwipeView>
+
+                </DataTemplate>
+
+            </CollectionView.ItemTemplate>
+
+        </CollectionView>
+
+    </Grid>
+
+</ContentPage>

@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<ContentView
+    x:Class="MauiStartup.Controls.MovieCardView"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:MauiStartup.Controls"
+    x:Name="this"
+    x:DataType="controls:MovieCardView">
+
+    <ContentView.Resources>
+
+        <Style
+            x:Key="MovieCardBorderStyle"
+            TargetType="Border">
+
+            <Setter Property="Padding" Value="12" />
+            <Setter Property="BackgroundColor" Value="White" />
+            <Setter Property="Stroke" Value="#DDDDDD" />
+            <Setter Property="StrokeThickness" Value="1" />
+
+            <Setter Property="StrokeShape">
+                <Setter.Value>
+                    <RoundRectangle CornerRadius="14" />
+                </Setter.Value>
+            </Setter>
+
+        </Style>
+
+        <Style
+            x:Key="MovieTitleStyle"
+            TargetType="Label">
+
+            <Setter Property="FontSize" Value="17" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="TextColor" Value="#202020" />
+            <Setter Property="MaxLines" Value="2" />
+            <Setter Property="LineBreakMode" Value="TailTruncation" />
+
+        </Style>
+
+        <Style
+            x:Key="MovieMetadataStyle"
+            TargetType="Label">
+
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="TextColor" Value="#777777" />
+
+        </Style>
+
+        <Style
+            x:Key="MoviePlotStyle"
+            TargetType="Label">
+
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="TextColor" Value="#444444" />
+            <Setter Property="MaxLines" Value="4" />
+            <Setter Property="LineBreakMode" Value="TailTruncation" />
+
+        </Style>
+
+    </ContentView.Resources>
+
+    <Border
+        BindingContext="{x:Reference this}"
+        Style="{StaticResource MovieCardBorderStyle}">
+
+        <Grid
+            ColumnDefinitions="100,*"
+            ColumnSpacing="12">
+
+            <Border
+                Grid.Column="0"
+                WidthRequest="100"
+                HeightRequest="150"
+                BackgroundColor="#E6E6E6"
+                StrokeThickness="0">
+
+                <Grid>
+
+                    <Label
+                        Text="No poster"
+                        HorizontalOptions="Center"
+                        VerticalOptions="Center" />
+
+                    <Image
+                        Source="{Binding Model.PosterUrl}"
+                        Aspect="AspectFill" />
+
+                    <Border
+                        IsVisible="{Binding Model.IsUserCreated}"
+                        BackgroundColor="#1565C0"
+                        Padding="5,3"
+                        HorizontalOptions="Start"
+                        VerticalOptions="Start"
+                        Margin="4"
+                        StrokeThickness="0">
+
+                        <Label
+                            Text="LOCAL"
+                            FontSize="9"
+                            FontAttributes="Bold"
+                            TextColor="White" />
+
+                    </Border>
+
+                    <Label
+                        Text="★"
+                        IsVisible="{Binding Model.IsFavorite}"
+                        FontSize="22"
+                        FontAttributes="Bold"
+                        TextColor="Gold"
+                        BackgroundColor="#99000000"
+                        Padding="5"
+                        HorizontalOptions="End"
+                        VerticalOptions="Start"
+                        Margin="4" />
+
+                </Grid>
+
+            </Border>
+
+            <VerticalStackLayout
+                Grid.Column="1"
+                Spacing="6"
+                VerticalOptions="Center">
+
+                <Label
+                    Text="{Binding Model.Title}"
+                    Style="{StaticResource MovieTitleStyle}" />
+
+                <Label
+                    Text="{Binding Model.ReleaseYear, StringFormat='Year: {0}'}"
+                    Style="{StaticResource MovieMetadataStyle}" />
+
+                <Label
+                    Text="{Binding Model.Rating, StringFormat='Rating: {0:F1}/10'}"
+                    Style="{StaticResource MovieMetadataStyle}" />
+
+                <Label
+                    Text="{Binding Model.Plot}"
+                    Style="{StaticResource MoviePlotStyle}" />
+
+            </VerticalStackLayout>
+
+        </Grid>
+
+    </Border>
+
+</ContentView>

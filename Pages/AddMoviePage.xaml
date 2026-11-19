@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<ContentPage
+    x:Class="MauiStartup.Pages.AddMoviePage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:viewmodels="clr-namespace:MauiStartup.ViewModels"
+    x:DataType="viewmodels:MovieFormViewModel"
+    Title="Add New Movie">
+
+    <ScrollView>
+
+        <VerticalStackLayout
+            Padding="20"
+            Spacing="14">
+
+            <Label
+                Text="Add a new movie"
+                FontSize="26"
+                FontAttributes="Bold" />
+
+
+            <Label
+                Text="Movie title"
+                FontAttributes="Bold" />
+
+            <Entry
+                Placeholder="Enter movie title"
+                Text="{Binding Draft.Title}" />
+
+
+            <Label
+                Text="Release year"
+                FontAttributes="Bold" />
+
+            <Entry
+                Placeholder="Enter release year"
+                Keyboard="Numeric"
+                Text="{Binding Draft.ReleaseYear,
+                       Converter={StaticResource StringToNullableIntConverter}}" />
+
+
+            <Label
+                Text="Description"
+                FontAttributes="Bold" />
+
+            <Editor
+                Placeholder="Enter movie description"
+                Text="{Binding Draft.Plot}"
+                AutoSize="TextChanges"
+                HeightRequest="120" />
+
+
+            <Label
+                Text="Movie poster"
+                FontAttributes="Bold" />
+
+            <Border
+                Padding="8"
+                BackgroundColor="#EEEEEE"
+                Stroke="#CCCCCC"
+                StrokeThickness="1">
+
+                <Grid HeightRequest="220">
+
+                    <Label
+                        Text="No poster selected"
+                        HorizontalOptions="Center"
+                        VerticalOptions="Center"
+                        TextColor="#777777" />
+
+                    <Image
+                        Source="{Binding Draft.PosterPath}"
+                        Aspect="AspectFit" />
+
+                </Grid>
+
+            </Border>
+
+            <Button
+                Text="Select Poster"
+                Command="{Binding SelectPosterCommand}"
+                BackgroundColor="#456B9A"
+                TextColor="White" />
+
+            <ActivityIndicator
+                IsRunning="{Binding IsBusy}"
+                IsVisible="{Binding IsBusy}" />
+
+
+            <Label
+                Text="{Binding ErrorMessage}"
+                TextColor="Red"
+                IsVisible="{Binding IsErrorVisible}" />
+
+
+            <Grid
+                ColumnDefinitions="*,*"
+                ColumnSpacing="12">
+
+                <Button
+                    Grid.Column="0"
+                    Text="Cancel"
+                    BackgroundColor="#777777"
+                    TextColor="White"
+                    Clicked="OnCancelClicked" />
+
+                <Button
+                    Grid.Column="1"
+                    Text="Save Movie"
+                    BackgroundColor="#287A45"
+                    TextColor="White"
+                    Command="{Binding SaveCommand}" />
+
+            </Grid>
+
+        </VerticalStackLayout>
+
+    </ScrollView>
+
+</ContentPage>

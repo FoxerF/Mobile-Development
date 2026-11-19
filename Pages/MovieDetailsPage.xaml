@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<ContentPage
+    x:Class="MauiStartup.Pages.MovieDetailsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:viewmodels="clr-namespace:MauiStartup.ViewModels"
+    x:DataType="viewmodels:MovieDetailsViewModel"
+    Title="Movie details">
+
+    <ScrollView>
+        <VerticalStackLayout
+            Padding="20"
+            Spacing="16">
+
+            <Button
+                Text="Back to catalogue"
+                HorizontalOptions="Start"
+                Clicked="OnCloseClicked" />
+            <Button
+                Text="Remove from Favorites"
+                Command="{Binding RemoveFromFavoritesCommand}"
+                IsVisible="{Binding Movie.IsFavorite}"
+                BackgroundColor="#B3261E"
+                TextColor="White"
+                HorizontalOptions="Start"
+                CornerRadius="10" />
+
+            <Image
+                Source="{Binding Movie.PosterUrl}"
+                HeightRequest="350"
+                Aspect="AspectFit"
+                HorizontalOptions="Center" />
+
+            <Label
+                Text="{Binding Movie.Title}"
+                FontSize="28"
+                FontAttributes="Bold"
+                HorizontalTextAlignment="Center" />
+
+            <Grid
+                ColumnDefinitions="*,*"
+                ColumnSpacing="12">
+
+                <Border
+                    Grid.Column="0"
+                    Padding="12"
+                    BackgroundColor="#EEEEEE"
+                    StrokeThickness="0">
+
+                    <VerticalStackLayout Spacing="4">
+                        <Label
+                            Text="Release year"
+                            FontSize="12"
+                            TextColor="#666666" />
+
+                        <Label
+                            Text="{Binding Movie.ReleaseYear}"
+                            FontSize="20"
+                            FontAttributes="Bold"
+                            TextColor="#222222" />
+                    </VerticalStackLayout>
+
+                </Border>
+
+                <Border
+                    Grid.Column="1"
+                    Padding="12"
+                    BackgroundColor="#EEEEEE"
+                    StrokeThickness="0">
+
+                    <VerticalStackLayout Spacing="4">
+                        <Label
+                            Text="TMDB rating"
+                            FontSize="12"
+                            TextColor="#666666" />
+
+                        <Label
+                            Text="{Binding Movie.Rating, StringFormat='{0:F1}/10'}"
+                            FontSize="20"
+                            FontAttributes="Bold"
+                            TextColor="#222222" />
+                    </VerticalStackLayout>
+
+                </Border>
+
+            </Grid>
+
+            <Label
+                Text="Overview"
+                FontSize="22"
+                FontAttributes="Bold" />
+
+            <Label
+                Text="{Binding Movie.Plot}"
+                FontSize="16"
+                LineBreakMode="WordWrap" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

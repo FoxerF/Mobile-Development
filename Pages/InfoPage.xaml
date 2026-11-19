@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<ContentPage
+    x:Class="MauiStartup.Pages.InfoPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:services="clr-namespace:MauiStartup.Services"
+    x:DataType="services:AppStateService"
+    Title="Інформація">
+
+    <ScrollView>
+        <VerticalStackLayout
+            Padding="24"
+            Spacing="18">
+
+            <VerticalStackLayout
+                IsVisible="{Binding IsNotRegistered}"
+                Spacing="12">
+
+                <Label
+                    Text="Доступ обмежено"
+                    FontSize="26"
+                    FontAttributes="Bold"
+                    HorizontalOptions="Center" />
+
+                <Label
+                    Text="Щоб переглянути цей вміст, спочатку пройдіть реєстрацію на головній сторінці."
+                    FontSize="16"
+                    HorizontalTextAlignment="Center" />
+
+            </VerticalStackLayout>
+
+            <VerticalStackLayout
+                IsVisible="{Binding IsRegistered}"
+                Spacing="16">
+
+                <Label
+                    Text="Вітаємо!"
+                    FontSize="28"
+                    FontAttributes="Bold"
+                    HorizontalOptions="Center" />
+
+                <Label
+                    Text="Реєстрацію успішно підтверджено для:"
+                    FontSize="16"
+                    HorizontalTextAlignment="Center" />
+
+                <Label
+                    Text="{Binding RegisteredEmail}"
+                    FontSize="18"
+                    FontAttributes="Bold"
+                    HorizontalOptions="Center" />
+
+                <BoxView
+                    HeightRequest="1"
+                    Color="Gray"
+                    Margin="0,8" />
+
+                <Label
+                    Text="Інформаційний розділ"
+                    FontSize="22"
+                    FontAttributes="Bold" />
+
+                <Label
+                    Text="Вітаємо у вашому особистому розділі! Тут відображається інформація, доступна користувачам, які успішно пройшли реєстрацію."
+                    FontSize="16" />
+
+                <Label
+                    Text="тут ми використовуємо спільний сервіс для збереження стану користувача між сторінками."
+                    FontSize="16" />
+
+                <VerticalStackLayout
+                    Spacing="8"
+                    Margin="0,20,0,0">
+
+                    <Image
+                        Source="tmdb_logo.svg"
+                        HeightRequest="40"
+                        Aspect="AspectFit"
+                        HorizontalOptions="Start" />
+
+                    <Label
+                        Text="This product uses the TMDB API but is not endorsed or certified by TMDB."
+                        FontSize="12"
+                        TextColor="Gray" />
+
+                </VerticalStackLayout>
+
+            </VerticalStackLayout>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
