@@ -26,6 +26,20 @@
                 HorizontalOptions="Start"
                 CornerRadius="10" />
 
+            <Button
+                Text="Delete Created Movie"
+                Command="{Binding DeleteUserCreatedMovieCommand}"
+                IsVisible="{Binding Movie.IsUserCreated}"
+                BackgroundColor="#B3261E"
+                TextColor="White"
+                HorizontalOptions="Start"
+                CornerRadius="10" />
+
+            <Label
+                Text="{Binding ErrorMessage}"
+                TextColor="Red"
+                IsVisible="{Binding IsErrorVisible}" />
+
             <Image
                 Source="{Binding Movie.PosterUrl}"
                 HeightRequest="350"

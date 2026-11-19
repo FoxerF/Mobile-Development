@@ -1,5 +1,4 @@
-﻿
-using MauiStartup.Models;
+﻿using MauiStartup.Models;
 using MauiStartup.Pages;
 using MauiStartup.ViewModels;
 
@@ -7,22 +6,23 @@ namespace MauiStartup.Services;
 
 public class NavigationService : INavigationService
 {
-    private readonly FavoriteMoviesService _favoriteMoviesService;
+    private readonly MovieService _movieService;
 
-    public NavigationService(
-        FavoriteMoviesService favoriteMoviesService)
+    public NavigationService(MovieService movieService)
     {
-        _favoriteMoviesService = favoriteMoviesService;
+        _movieService = movieService;
     }
 
     public async Task ShowMovieDetailsAsync(Movie movie)
     {
         var viewModel = new MovieDetailsViewModel(
             movie,
-            _favoriteMoviesService);
+            _movieService);
 
-        var detailsPage = new MovieDetailsPage(viewModel);
+        var detailsPage =
+            new MovieDetailsPage(viewModel);
 
-        await Shell.Current.Navigation.PushModalAsync(detailsPage);
+        await Shell.Current.Navigation.PushModalAsync(
+            detailsPage);
     }
 }

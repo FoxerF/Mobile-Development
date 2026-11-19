@@ -4,19 +4,24 @@ using System.Threading;
 using System.Threading.Tasks;
 using MauiStartup.Pages;
 using MauiStartup.ViewModels;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MauiStartup.Pages;
 
 public partial class MovieCatalogPage : ContentPage
 {
     private readonly MovieCatalogViewModel _viewModel;
+    private readonly IServiceProvider _serviceProvider;
 
     private bool _isWideLayout;
     private int _isOpeningAddPage;
 
-    public MovieCatalogPage(MovieCatalogViewModel viewModel)
+    public MovieCatalogPage(
+        MovieCatalogViewModel viewModel,
+        IServiceProvider serviceProvider)
     {
         _viewModel = viewModel;
+        _serviceProvider = serviceProvider;
 
         InitializeComponent();
 
@@ -50,14 +55,12 @@ public partial class MovieCatalogPage : ContentPage
 
         try
         {
-            var formViewModel = new MovieFormViewModel();
-
             var addMoviePage =
-                new AddMoviePage(formViewModel);
+                _serviceProvider.GetRequiredService<AddMoviePage>();
 
-            addMoviePage.Saved += (_, movie) =>
+            addMoviePage.Saved += (_, _) =>
             {
-                _viewModel.AddUserCreatedMovie(movie);
+                _viewModel.RefreshAfterUserCreatedMovieSaved();
             };
 
             await Navigation.PushModalAsync(addMoviePage);

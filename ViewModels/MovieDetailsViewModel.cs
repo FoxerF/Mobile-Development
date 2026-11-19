@@ -1,4 +1,4 @@
-﻿
+﻿using System;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -9,24 +9,71 @@ namespace MauiStartup.ViewModels;
 
 public partial class MovieDetailsViewModel : ObservableObject
 {
-    private readonly FavoriteMoviesService _favoriteMoviesService;
+    private readonly MovieService _movieService;
 
     [ObservableProperty]
     private Movie movie;
 
+    [ObservableProperty]
+    private string errorMessage = string.Empty;
+
+    [ObservableProperty]
+    private bool isErrorVisible;
+
+    public event EventHandler? UserMovieDeleted;
+
     public MovieDetailsViewModel(
         Movie movie,
-        FavoriteMoviesService favoriteMoviesService)
+        MovieService movieService)
     {
         this.movie = movie;
-        _favoriteMoviesService = favoriteMoviesService;
+
+        _movieService = movieService;
     }
 
     [RelayCommand]
     private Task RemoveFromFavoritesAsync()
     {
-        _favoriteMoviesService.Remove(Movie);
+        _movieService.RemoveFromFavorites(Movie);
 
         return Task.CompletedTask;
+    }
+
+    [RelayCommand]
+    private async Task DeleteUserCreatedMovieAsync()
+    {
+        if (!Movie.IsUserCreated)
+            return;
+
+        IsErrorVisible = false;
+        ErrorMessage = string.Empty;
+
+        try
+        {
+            bool deleted =
+                await _movieService.DeleteUserCreatedMovieAsync(
+                    Movie);
+
+            if (!deleted)
+            {
+                ShowError(
+                    "This movie was not found in saved storage.");
+
+                return;
+            }
+
+            UserMovieDeleted?.Invoke(this, EventArgs.Empty);
+        }
+        catch (Exception ex)
+        {
+            ShowError(
+                $"Could not delete the movie: {ex.Message}");
+        }
+    }
+
+    private void ShowError(string message)
+    {
+        ErrorMessage = message;
+        IsErrorVisible = true;
     }
 }

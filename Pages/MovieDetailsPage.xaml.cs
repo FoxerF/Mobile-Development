@@ -1,4 +1,3 @@
-
 using MauiStartup.ViewModels;
 using System.Threading;
 
@@ -8,22 +7,37 @@ public partial class MovieDetailsPage : ContentPage
 {
     private int _isClosing;
 
+    private readonly MovieDetailsViewModel _viewModel;
+
     public MovieDetailsPage(MovieDetailsViewModel viewModel)
     {
         InitializeComponent();
 
-        BindingContext = viewModel;
-    }
+        _viewModel = viewModel;
 
+        BindingContext = _viewModel;
+
+        _viewModel.UserMovieDeleted += OnUserMovieDeleted;
+    }
+    private async void OnUserMovieDeleted(
+    object? sender,
+    EventArgs e)
+    {
+        await CloseModalAsync();
+    }
     private async void OnCloseClicked(
         object sender,
         EventArgs e)
     {
+        await CloseModalAsync(sender as Button);
+    }
 
+    private async Task CloseModalAsync(Button? button = null)
+    {
         if (Interlocked.Exchange(ref _isClosing, 1) != 0)
             return;
 
-        if (sender is Button button)
+        if (button is not null)
             button.IsEnabled = false;
 
         try
@@ -38,7 +52,6 @@ public partial class MovieDetailsPage : ContentPage
         }
         catch (InvalidOperationException)
         {
-
         }
     }
 }

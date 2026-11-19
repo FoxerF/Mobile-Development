@@ -1,7 +1,6 @@
-﻿
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -14,26 +13,27 @@ namespace MauiStartup.ViewModels;
 
 public partial class MovieCatalogViewModel : ObservableObject
 {
-    private readonly MovieApiService _movieApiService;
+    private readonly MovieService _movieService;
+
     private readonly INavigationService _navigationService;
-    private readonly FavoriteMoviesService _favoriteMoviesService;
 
     private const int VisibleBatchSize = 10;
 
-    public ObservableCollection<Movie> TitlesLoaded { get; } = new();
+    public ObservableCollection<Movie> TitlesLoaded =>
+        _movieService.ApiMovies;
 
-    public ObservableCollection<Movie> UserCreatedMovies { get; } = new();
+    public ObservableCollection<Movie> UserCreatedMovies =>
+        _movieService.UserCreatedMovies;
 
     [ObservableProperty]
     private ObservableCollection<Movie> titlesVisible = new();
 
     private int _visibleMovieCount;
 
-    private readonly HashSet<string> _loadedMovieIds =
-        new(StringComparer.Ordinal);
-
     private int? _nextPage;
+
     private bool _hasLoadedInitialPage;
+
     private bool _paginationPaused;
 
     [ObservableProperty]
@@ -82,13 +82,14 @@ public partial class MovieCatalogViewModel : ObservableObject
     private int remainingItemsThreshold = 5;
 
     public MovieCatalogViewModel(
-        MovieApiService movieApiService,
-        INavigationService navigationService,
-        FavoriteMoviesService favoriteMoviesService)
+        MovieService movieService,
+        INavigationService navigationService)
     {
-        _movieApiService = movieApiService;
+        _movieService = movieService;
         _navigationService = navigationService;
-        _favoriteMoviesService = favoriteMoviesService;
+
+        _movieService.UserCreatedMovies.CollectionChanged +=
+            OnUserCreatedMoviesChanged;
     }
 
     public async Task LoadInitialMoviesAsync()
@@ -102,20 +103,17 @@ public partial class MovieCatalogViewModel : ObservableObject
 
         try
         {
-            var result =
-                await _movieApiService.GetMoviesAsync(page: 1);
+            await _movieService.InitializeAsync();
 
-            TitlesLoaded.Clear();
-            TitlesVisible.Clear();
-            _loadedMovieIds.Clear();
+            _nextPage =
+                await _movieService.LoadApiMoviesAsync(1);
+
+            _hasLoadedInitialPage = true;
 
             _visibleMovieCount = 0;
 
-            AddLoadedMovies(result.Movies);
-
-            _nextPage = result.NextPage;
-
-            _hasLoadedInitialPage = true;
+            TitlesVisible =
+                new ObservableCollection<Movie>();
 
             RevealNextBatch();
         }
@@ -160,13 +158,9 @@ public partial class MovieCatalogViewModel : ObservableObject
 
         try
         {
-            var result =
-                await _movieApiService.GetMoviesAsync(
-                    page: _nextPage.Value);
-
-            AddLoadedMovies(result.Movies);
-
-            _nextPage = result.NextPage;
+            _nextPage =
+                await _movieService.LoadApiMoviesAsync(
+                    _nextPage.Value);
 
             RevealNextBatch();
         }
@@ -181,18 +175,6 @@ public partial class MovieCatalogViewModel : ObservableObject
         }
     }
 
-    private void AddLoadedMovies(IEnumerable<Movie> movies)
-    {
-        foreach (Movie movie in movies)
-        {
-            if (string.IsNullOrWhiteSpace(movie.Id) ||
-                _loadedMovieIds.Add(movie.Id))
-            {
-                TitlesLoaded.Add(movie);
-            }
-        }
-    }
-
     private void RevealNextBatch()
     {
         int endIndex = Math.Min(
@@ -201,7 +183,9 @@ public partial class MovieCatalogViewModel : ObservableObject
 
         while (_visibleMovieCount < endIndex)
         {
-            TitlesVisible.Add(TitlesLoaded[_visibleMovieCount]);
+            TitlesVisible.Add(
+                TitlesLoaded[_visibleMovieCount]);
+
             _visibleMovieCount++;
         }
 
@@ -243,9 +227,7 @@ public partial class MovieCatalogViewModel : ObservableObject
         IsDisplayingFavorites = true;
         IsDisplayingUserMovies = false;
 
-        TitlesVisible =
-            new ObservableCollection<Movie>(
-                _favoriteMoviesService.Favorites);
+        TitlesVisible = _movieService.Favorites;
 
         CatalogTitle = "Улюблені фільми";
 
@@ -282,9 +264,7 @@ public partial class MovieCatalogViewModel : ObservableObject
         IsDisplayingUserMovies = true;
         IsDisplayingFavorites = false;
 
-        TitlesVisible =
-            new ObservableCollection<Movie>(
-                UserCreatedMovies);
+        TitlesVisible = _movieService.UserCreatedMovies;
 
         CatalogTitle = "Мої фільми";
 
@@ -333,19 +313,48 @@ public partial class MovieCatalogViewModel : ObservableObject
         UpdateHasMoreItems();
     }
 
-    public void AddUserCreatedMovie(Movie movie)
+    public void RefreshAfterUserCreatedMovieSaved()
     {
-        if (UserCreatedMovies.Any(
-            existing => existing.Id == movie.Id))
+        ShowAllMovies();
+    }
+
+    private void OnUserCreatedMoviesChanged(
+        object? sender,
+        NotifyCollectionChangedEventArgs e)
+    {
+        if (IsDisplayingFavorites ||
+            IsDisplayingUserMovies)
         {
+            UpdateHasMoreItems();
             return;
         }
 
-        movie.IsUserCreated = true;
+        if (e.OldItems is not null)
+        {
+            foreach (Movie removedMovie in e.OldItems)
+            {
+                Movie? visibleMovie =
+                    TitlesVisible.FirstOrDefault(
+                        existing => existing.Id == removedMovie.Id);
 
-        UserCreatedMovies.Add(movie);
+                if (visibleMovie is not null)
+                    TitlesVisible.Remove(visibleMovie);
+            }
+        }
 
-        ShowAllMovies();
+        if (e.NewItems is not null)
+        {
+            foreach (Movie addedMovie in e.NewItems)
+            {
+                if (!TitlesVisible.Any(
+                    existing => existing.Id == addedMovie.Id))
+                {
+                    TitlesVisible.Add(addedMovie);
+                }
+            }
+        }
+
+        UpdateHasMoreItems();
     }
 
     [RelayCommand]
@@ -356,17 +365,11 @@ public partial class MovieCatalogViewModel : ObservableObject
 
         if (IsDisplayingFavorites)
         {
-            _favoriteMoviesService.Remove(movie);
-
-            Movie? visibleMovie = TitlesVisible.FirstOrDefault(
-                existing => existing.Id == movie.Id);
-
-            if (visibleMovie is not null)
-                TitlesVisible.Remove(visibleMovie);
+            _movieService.RemoveFromFavorites(movie);
         }
         else
         {
-            _favoriteMoviesService.Add(movie);
+            _movieService.AddToFavorites(movie);
         }
 
         return Task.CompletedTask;
@@ -377,9 +380,7 @@ public partial class MovieCatalogViewModel : ObservableObject
         if (!IsDisplayingFavorites)
             return;
 
-        TitlesVisible =
-            new ObservableCollection<Movie>(
-                _favoriteMoviesService.Favorites);
+        TitlesVisible = _movieService.Favorites;
 
         UpdateHasMoreItems();
     }
@@ -408,7 +409,8 @@ public partial class MovieCatalogViewModel : ObservableObject
     {
         System.Diagnostics.Debug.WriteLine(ex.ToString());
 
-        ErrorMessage = $"{ex.GetType().Name}: {ex.Message}";
+        ErrorMessage =
+            $"{ex.GetType().Name}: {ex.Message}";
 
         if (ex.InnerException != null)
         {

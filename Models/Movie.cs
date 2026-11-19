@@ -1,6 +1,5 @@
-﻿
-using CommunityToolkit.Mvvm.ComponentModel;
-
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using System.Text.Json.Serialization;
 namespace MauiStartup.Models;
 
 public partial class Movie : ObservableObject
@@ -18,6 +17,7 @@ public partial class Movie : ObservableObject
     public string Plot { get; set; } = "No description available.";
 
     [ObservableProperty]
+    [property: JsonIgnore]
     private bool isFavorite;
 
     [ObservableProperty]

@@ -21,7 +21,6 @@ public static class MauiProgram
             });
 
         builder.Services.AddSingleton<AppStateService>();
-        builder.Services.AddSingleton<FavoriteMoviesService>();
         builder.Services.AddSingleton<MainPageModel>();
 
         builder.Services.AddSingleton<MainPage>();
@@ -37,17 +36,28 @@ public static class MauiProgram
             client.DefaultRequestHeaders.Authorization =
                 new System.Net.Http.Headers.AuthenticationHeaderValue(
                     "Bearer",
-                    "Token_here"
+                    TmdbSecrets.ReadAccessToken
                 );
 
             return client;
         });
 
         builder.Services.AddSingleton<MovieApiService>();
+
+        builder.Services.AddSingleton<StorageService>();
+        builder.Services.AddSingleton<MovieService>();
+
         builder.Services.AddSingleton<MovieCatalogViewModel>();
         builder.Services.AddSingleton<MovieCatalogPage>();
+
+        builder.Services.AddTransient<MovieFormViewModel>();
+        builder.Services.AddTransient<AddMoviePage>();
+
         builder.Services.AddSingleton<AppShell>();
-        builder.Services.AddSingleton<INavigationService, NavigationService>();
+
+        builder.Services.AddSingleton<
+            INavigationService,
+            NavigationService>();
 
 #if DEBUG
         builder.Logging.AddDebug();

@@ -37,6 +37,8 @@ public partial class AddMoviePage : ContentPage
         object sender,
         EventArgs e)
     {
+        await _viewModel.DiscardSelectedPosterAsync();
+
         await CloseModalAsync(sender as Button);
     }
 
