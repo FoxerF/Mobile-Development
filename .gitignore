@@ -10,4 +10,6 @@ obj/
 # OS-generated files
 .DS_Store
 
+# Sensitive files
 Services/TmdbSecrets.cs
+Services/GoogleAuthSettings.cs

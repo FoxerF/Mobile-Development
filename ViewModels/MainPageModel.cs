@@ -1,99 +1,134 @@
-﻿
-using System;
-using System.Collections.Generic;
-using System.Net.Mail;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using MauiStartup.Models;
 using MauiStartup.Services;
 
 namespace MauiStartup.ViewModels;
 
 public partial class MainPageModel : ObservableObject
 {
-    private readonly AppStateService _appStateService;
+    private readonly AuthService _authService;
 
-    private readonly Dictionary<string, string> _registeredUsers =
-        new(StringComparer.OrdinalIgnoreCase)
-        {
-            ["foxer@example.com"] = "Maui123!",
-            ["student@example.com"] = "Study123!"
-        };
+    private bool _initialized;
 
-    public MainPageModel(AppStateService appStateService)
+    [ObservableProperty]
+    private AuthUser? currentUser;
+
+    [ObservableProperty]
+    private bool isBusy;
+
+    [ObservableProperty]
+    private string statusMessage = string.Empty;
+
+    public bool IsAuthenticated =>
+        CurrentUser is not null;
+
+    public bool IsNotAuthenticated =>
+        CurrentUser is null;
+
+    public MainPageModel(AuthService authService)
     {
-        _appStateService = appStateService;
+        _authService = authService;
+
+        CurrentUser = _authService.CurrentUser;
+
+        _authService.PropertyChanged +=
+            OnAuthServicePropertyChanged;
     }
 
-    [ObservableProperty]
-    private string email = string.Empty;
+    private void OnAuthServicePropertyChanged(
+        object? sender,
+        System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName ==
+            nameof(AuthService.CurrentUser))
+        {
+            CurrentUser = _authService.CurrentUser;
+        }
+    }
 
-    [ObservableProperty]
-    private string password = string.Empty;
+    partial void OnCurrentUserChanged(AuthUser? value)
+    {
+        OnPropertyChanged(nameof(IsAuthenticated));
+        OnPropertyChanged(nameof(IsNotAuthenticated));
+    }
 
-    [ObservableProperty]
-    private string resultMessage = string.Empty;
+    public async Task InitializeAsync()
+    {
+        if (_initialized)
+            return;
 
-    [ObservableProperty]
-    private bool isResultVisible;
+        _initialized = true;
+
+        try
+        {
+            await _authService.RestoreSessionAsync();
+        }
+        catch (Exception ex)
+        {
+            StatusMessage =
+                $"Session restoration failed: {ex.Message}";
+        }
+    }
 
     [RelayCommand]
-    private void CheckRegistration()
+    private async Task SignInAsync()
     {
-        string emailInput = Email?.Trim() ?? string.Empty;
-        string passwordInput = Password ?? string.Empty;
-
-        if (!MailAddress.TryCreate(emailInput, out MailAddress? parsedEmail) ||
-            !string.Equals(
-                parsedEmail.Address,
-                emailInput,
-                StringComparison.OrdinalIgnoreCase))
-        {
-            ResultMessage = "Некоректний формат електронної пошти.";
-            IsResultVisible = true;
+        if (IsBusy)
             return;
-        }
 
-        if (string.IsNullOrWhiteSpace(passwordInput))
+        IsBusy = true;
+        StatusMessage = string.Empty;
+
+        try
         {
-            ResultMessage = "Введіть пароль.";
-            IsResultVisible = true;
+            AuthUser user =
+                await _authService.SignInAsync();
+
+            CurrentUser = user;
+
+            StatusMessage =
+                $"Successfully signed in as {user.Email}.";
+        }
+        catch (OperationCanceledException)
+        {
+            StatusMessage = "Sign-in was cancelled.";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage =
+                $"Sign-in failed: {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task SignOutAsync()
+    {
+        if (IsBusy)
             return;
-        }
 
-        bool isRegistered =
-            _registeredUsers.TryGetValue(emailInput, out string? storedPassword) &&
-            string.Equals(
-                storedPassword,
-                passwordInput,
-                StringComparison.Ordinal);
+        IsBusy = true;
 
-        if (isRegistered)
+        try
         {
-            _appStateService.MarkRegistered(emailInput);
+            await _authService.SignOutAsync();
 
-            ResultMessage = "Реєстрацію підтверджено!";
+            CurrentUser = null;
+
+            StatusMessage = "You have signed out.";
         }
-        else
+        catch (Exception ex)
         {
-            ResultMessage = "Користувача з такими даними не знайдено.";
+            StatusMessage =
+                $"Sign-out failed: {ex.Message}";
         }
-
-        IsResultVisible = true;
-    }
-
-    partial void OnEmailChanged(string value)
-    {
-        ClearResult();
-    }
-
-    partial void OnPasswordChanged(string value)
-    {
-        ClearResult();
-    }
-
-    private void ClearResult()
-    {
-        ResultMessage = string.Empty;
-        IsResultVisible = false;
+        finally
+        {
+            IsBusy = false;
+        }
     }
 }

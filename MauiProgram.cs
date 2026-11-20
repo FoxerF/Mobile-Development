@@ -1,4 +1,5 @@
-﻿using MauiStartup.Services;
+﻿
+using MauiStartup.Services;
 using MauiStartup.ViewModels;
 using MauiStartup.Pages;
 using System.Net.Http;
@@ -21,6 +22,10 @@ public static class MauiProgram
             });
 
         builder.Services.AddSingleton<AppStateService>();
+
+        builder.Services.AddSingleton<AuthService>(_ =>
+            new AuthService(new HttpClient()));
+
         builder.Services.AddSingleton<MainPageModel>();
 
         builder.Services.AddSingleton<MainPage>();
@@ -30,7 +35,8 @@ public static class MauiProgram
         {
             var client = new HttpClient
             {
-                BaseAddress = new Uri("https://api.themoviedb.org/3/")
+                BaseAddress =
+                    new Uri("https://api.themoviedb.org/3/")
             };
 
             client.DefaultRequestHeaders.Authorization =

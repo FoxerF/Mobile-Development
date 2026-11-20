@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -13,8 +14,8 @@ namespace MauiStartup.Services;
 public class MovieService
 {
     private readonly MovieApiService _movieApiService;
-
     private readonly StorageService _storageService;
+    private readonly AuthService _authService;
 
     private readonly SemaphoreSlim _initializationLock = new(1, 1);
 
@@ -31,10 +32,37 @@ public class MovieService
 
     public MovieService(
         MovieApiService movieApiService,
-        StorageService storageService)
+        StorageService storageService,
+        AuthService authService)
     {
         _movieApiService = movieApiService;
         _storageService = storageService;
+        _authService = authService;
+
+        _authService.PropertyChanged +=
+            OnAuthServicePropertyChanged;
+    }
+
+    private void OnAuthServicePropertyChanged(
+        object? sender,
+        PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(AuthService.CurrentUser))
+            return;
+
+        foreach (Movie movie in Favorites)
+            movie.IsFavorite = false;
+
+        Favorites.Clear();
+    }
+
+    private void EnsureAuthenticated()
+    {
+        if (_authService.CurrentUser is null)
+        {
+            throw new UnauthorizedAccessException(
+                "You must sign in with Google to use this feature.");
+        }
     }
 
     public async Task InitializeAsync()
@@ -99,15 +127,23 @@ public class MovieService
 
     public async Task AddUserCreatedMovieAsync(Movie movie)
     {
+        EnsureAuthenticated();
+
         await InitializeAsync();
 
+        EnsureAuthenticated();
+
         if (string.IsNullOrWhiteSpace(movie.Id))
+        {
             throw new InvalidOperationException(
                 "The movie must have an ID.");
+        }
 
         if (!movie.IsUserCreated)
+        {
             throw new InvalidOperationException(
                 "The movie must be marked as user-created.");
+        }
 
         if (string.IsNullOrWhiteSpace(movie.PosterUrl) ||
             !File.Exists(movie.PosterUrl))
@@ -122,7 +158,7 @@ public class MovieService
             return;
         }
 
-        List<Movie> updatedMovies =
+        var updatedMovies =
             UserCreatedMovies
                 .Append(movie)
                 .ToList();
@@ -135,6 +171,8 @@ public class MovieService
     public async Task<bool> DeleteUserCreatedMovieAsync(
         Movie movie)
     {
+        EnsureAuthenticated();
+
         await InitializeAsync();
 
         if (!movie.IsUserCreated)
@@ -147,7 +185,7 @@ public class MovieService
         if (existingMovie is null)
             return false;
 
-        List<Movie> updatedMovies =
+        var updatedMovies =
             UserCreatedMovies
                 .Where(existing => existing.Id != movie.Id)
                 .ToList();
@@ -174,6 +212,9 @@ public class MovieService
 
     public bool AddToFavorites(Movie movie)
     {
+        if (_authService.CurrentUser is null)
+            return false;
+
         if (string.IsNullOrWhiteSpace(movie.Id) ||
             Favorites.Any(
                 existing => existing.Id == movie.Id))
@@ -189,6 +230,9 @@ public class MovieService
 
     public bool RemoveFromFavorites(Movie movie)
     {
+        if (_authService.CurrentUser is null)
+            return false;
+
         Movie? existing =
             Favorites.FirstOrDefault(
                 favorite => favorite.Id == movie.Id);

@@ -1,8 +1,10 @@
+
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using MauiStartup.Pages;
+using MauiStartup.Services;
 using MauiStartup.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -12,23 +14,43 @@ public partial class MovieCatalogPage : ContentPage
 {
     private readonly MovieCatalogViewModel _viewModel;
     private readonly IServiceProvider _serviceProvider;
+    private readonly AuthService _authService;
 
     private bool _isWideLayout;
     private int _isOpeningAddPage;
 
+    public MovieCatalogViewModel ViewModel => _viewModel;
+
+    public bool IsAuthenticated =>
+        _authService.CurrentUser is not null;
+
     public MovieCatalogPage(
         MovieCatalogViewModel viewModel,
-        IServiceProvider serviceProvider)
+        IServiceProvider serviceProvider,
+        AuthService authService)
     {
         _viewModel = viewModel;
         _serviceProvider = serviceProvider;
+        _authService = authService;
 
         InitializeComponent();
 
         BindingContext = _viewModel;
+
+        _authService.PropertyChanged +=
+            OnAuthServicePropertyChanged;
     }
 
-    public MovieCatalogViewModel ViewModel => _viewModel;
+    private void OnAuthServicePropertyChanged(
+        object? sender,
+        PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName ==
+            nameof(AuthService.CurrentUser))
+        {
+            OnPropertyChanged(nameof(IsAuthenticated));
+        }
+    }
 
     protected override async void OnAppearing()
     {
@@ -50,6 +72,16 @@ public partial class MovieCatalogPage : ContentPage
         object sender,
         EventArgs e)
     {
+        if (!IsAuthenticated)
+        {
+            await DisplayAlert(
+                "Authentication required",
+                "Sign in with Google before adding movies.",
+                "OK");
+
+            return;
+        }
+
         if (Interlocked.Exchange(ref _isOpeningAddPage, 1) != 0)
             return;
 

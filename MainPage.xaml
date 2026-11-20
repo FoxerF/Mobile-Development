@@ -6,45 +6,89 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:viewmodel="clr-namespace:MauiStartup.ViewModels"
     x:DataType="viewmodel:MainPageModel"
-    Title="Зареєструватися">
+    Title="Профіль">
 
     <ScrollView>
         <VerticalStackLayout
             Padding="24"
-            Spacing="16"
+            Spacing="18"
             VerticalOptions="Center">
 
             <Label
-                Text="Зареєструватися"
-                FontSize="26"
+                Text="Профіль користувача"
+                FontSize="28"
                 FontAttributes="Bold"
                 HorizontalOptions="Center" />
 
+            <Border
+                Padding="20"
+                StrokeThickness="1"
+                Stroke="#CCCCCC"
+                StrokeShape="RoundRectangle 16">
+
+                <VerticalStackLayout
+                    Spacing="14"
+                    HorizontalOptions="Center">
+
+                    <Image
+                        Source="{Binding CurrentUser.PictureUrl}"
+                        WidthRequest="110"
+                        HeightRequest="110"
+                        Aspect="AspectFill"
+                        IsVisible="{Binding IsAuthenticated}" />
+
+                    <Label
+                        Text="{Binding CurrentUser.Name}"
+                        FontSize="22"
+                        FontAttributes="Bold"
+                        HorizontalTextAlignment="Center"
+                        IsVisible="{Binding IsAuthenticated}" />
+
+                    <Label
+                        Text="{Binding CurrentUser.Email}"
+                        FontSize="14"
+                        HorizontalTextAlignment="Center"
+                        IsVisible="{Binding IsAuthenticated}" />
+
+                    <Label
+                        Text="You are not signed in."
+                        FontSize="16"
+                        HorizontalTextAlignment="Center"
+                        IsVisible="{Binding IsNotAuthenticated}" />
+
+                    <Button
+                        Text="Sign in with Google"
+                        Command="{Binding SignInCommand}"
+                        IsEnabled="True"
+                        IsVisible="{Binding IsNotAuthenticated}"
+                        BackgroundColor="#4285F4"
+                        TextColor="White"
+                        CornerRadius="10" />
+
+                    <Button
+                        Text="Sign out"
+                        Command="{Binding SignOutCommand}"
+                        IsVisible="{Binding IsAuthenticated}"
+                        BackgroundColor="#B3261E"
+                        TextColor="White"
+                        CornerRadius="10" />
+
+                    <ActivityIndicator
+                        IsRunning="{Binding IsBusy}"
+                        IsVisible="{Binding IsBusy}" />
+
+                    <Label
+                        Text="{Binding StatusMessage}"
+                        HorizontalTextAlignment="Center"
+                        LineBreakMode="WordWrap" />
+
+                </VerticalStackLayout>
+            </Border>
+
             <Label
-                Text="Введіть електронну пошту та пароль."
-                FontSize="14"
-                HorizontalTextAlignment="Center" />
-
-            <Entry
-                Placeholder="Електронна пошта"
-                Keyboard="Email"
-                Text="{Binding Email, Mode=TwoWay}" />
-
-            <Entry
-                Placeholder="Пароль"
-                IsPassword="True"
-                Text="{Binding Password, Mode=TwoWay}" />
-
-            <Button
-                Text="Зареєструватися"
-                Command="{Binding CheckRegistrationCommand}" />
-
-            <Label
-                Text="{Binding ResultMessage}"
-                IsVisible="{Binding IsResultVisible}"
-                FontSize="16"
+                Text="Sign in to manage your favorites and add your own movies to the catalogue."
                 HorizontalTextAlignment="Center"
-                HorizontalOptions="Center" />
+                FontSize="14" />
 
         </VerticalStackLayout>
     </ScrollView>

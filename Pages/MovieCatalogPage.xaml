@@ -35,6 +35,8 @@
                     BackgroundColor="{Binding FavoritesButtonBackground}"
                     TextColor="White"
                     Command="{Binding ToggleFavoritesCommand}"
+                    IsEnabled="{Binding IsAuthenticated,
+                        Source={x:Reference ThisPage}}"
                     CornerRadius="10" />
 
                 <Button
@@ -43,6 +45,8 @@
                     BackgroundColor="{Binding UserMoviesButtonBackground}"
                     TextColor="White"
                     Command="{Binding ToggleUserMoviesCommand}"
+                    IsEnabled="{Binding IsAuthenticated,
+                        Source={x:Reference ThisPage}}"
                     CornerRadius="10" />
 
             </Grid>
@@ -52,6 +56,8 @@
                 BackgroundColor="#287A45"
                 TextColor="White"
                 Clicked="OnAddMovieClicked"
+                IsEnabled="{Binding IsAuthenticated,
+                    Source={x:Reference ThisPage}}"
                 CornerRadius="10" />
 
             <ActivityIndicator
@@ -73,7 +79,6 @@
             </VerticalStackLayout>
 
         </VerticalStackLayout>
-
 
         <CollectionView
             x:Name="MoviesCollection"
@@ -101,7 +106,6 @@
             </CollectionView.EmptyView>
 
             <CollectionView.ItemTemplate>
-
                 <DataTemplate x:DataType="models:Movie">
 
                     <SwipeView
@@ -115,7 +119,8 @@
                                     Text="{Binding ViewModel.SwipeText, Source={x:Reference ThisPage}}"
                                     BackgroundColor="{Binding ViewModel.SwipeBackground, Source={x:Reference ThisPage}}"
                                     Command="{Binding ViewModel.ManageFavoritesCommand, Source={x:Reference ThisPage}}"
-                                    CommandParameter="{Binding .}" />
+                                    CommandParameter="{Binding .}"
+                                    IsEnabled="{Binding IsAuthenticated, Source={x:Reference ThisPage}}" />
 
                             </SwipeItems>
                         </SwipeView.RightItems>
@@ -127,7 +132,6 @@
                     </SwipeView>
 
                 </DataTemplate>
-
             </CollectionView.ItemTemplate>
 
         </CollectionView>
